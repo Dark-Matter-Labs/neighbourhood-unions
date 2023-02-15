@@ -1,25 +1,87 @@
-import logo from './logo.svg';
-import './App.css';
+import * as React from 'react';
+import {useState, useMemo} from 'react';
+import {render} from 'react-dom';
+import ReactMapboxGL, {
+  Marker,
+  Popup,
+  NavigationControl,
+  FullscreenControl,
+  ScaleControl,
+  GeolocateControl
+} from 'react-map-gl';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
+import Pin from './components/Pin';
+
+import hmoData from './data/hmo.json'
+
+const TOKEN = process.env.REACT_APP_MAPBOX_API;
+
+export default function App() {
+  const [popupInfo, setPopupInfo] = useState(null);
+
+  const pins = useMemo(
+    () =>
+      hmoData.map((city, index) => (
+        <Marker
+          key={`marker-${index}`}
+          longitude={city.longitude}
+          latitude={city.latitude}
+          anchor="bottom"
+          onClick={e => {
+            // If we let the click event propagates to the map, it will immediately close the popup
+            // with `closeOnClick: true`
+            e.originalEvent.stopPropagation();
+            setPopupInfo(city);
+          }}
         >
-          Learn React
-        </a>
-      </header>
+          <Pin />
+        </Marker>
+      )),
+    []
+  );
+
+  return (
+    <div id="map">
+      <ReactMapboxGL
+        initialViewState={{
+          latitude: 51.56,
+          longitude: -0.07,
+          zoom: 14,
+          bearing: 0,
+          pitch: 0
+        }}
+        mapStyle="mapbox://styles/mapbox/dark-v9"
+        mapboxAccessToken={TOKEN}
+        style={Object.assign({ width: '100vw', overflowX: 'hidden' }, { height: '100vh' })}
+      >
+        <GeolocateControl position="top-left" />
+        <FullscreenControl position="top-left" />
+        <NavigationControl position="top-left" />
+        <ScaleControl />
+
+        {pins}
+
+        {popupInfo && (
+          <Popup
+            anchor="top"
+            longitude={Number(popupInfo.longitude)}
+            latitude={Number(popupInfo.latitude)}
+            onClose={() => setPopupInfo(null)}
+          >
+            <div>
+              <p>Address: {popupInfo.Property_address}</p>
+              <p>License holder name: {popupInfo.Licence_holder_name}</p>
+              <p>License type: {popupInfo.Licence_type}</p>
+              <p>License start date: {popupInfo.Licence_start_date}</p>
+              <p>License end date: {popupInfo.Licence_end_date}</p>
+            </div>
+          </Popup>
+        )}
+      </ReactMapboxGL>
     </div>
   );
 }
 
-export default App;
+export function renderToDom(container) {
+  render(<App />, container);
+}
