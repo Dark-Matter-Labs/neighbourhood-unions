@@ -6,13 +6,17 @@ import ReactMapboxGL, {
   Popup,
   NavigationControl,
   FullscreenControl,
-  ScaleControl,
-  GeolocateControl
+  ScaleControl
 } from 'react-map-gl';
+import mapboxgl from "mapbox-gl";
 
 import Pin from './components/Pin';
 
 import hmoData from './data/hmo.json'
+
+
+// eslint-disable-next-line import/no-webpack-loader-syntax
+mapboxgl.workerClass = require("worker-loader!mapbox-gl/dist/mapbox-gl-csp-worker").default;
 
 const TOKEN = process.env.REACT_APP_MAPBOX_API;
 
@@ -54,7 +58,6 @@ export default function App() {
         mapboxAccessToken={TOKEN}
         style={Object.assign({ width: '100vw', overflowX: 'hidden' }, { height: '100vh' })}
       >
-        <GeolocateControl position="top-left" />
         <FullscreenControl position="top-left" />
         <NavigationControl position="top-left" />
         <ScaleControl />
